@@ -22,12 +22,15 @@ public class Main {
     	for (int i = 0; i < m; i++) {
     		st = new StringTokenizer(br.readLine());
     		int num = Integer.parseInt(st.nextToken());
-    		int first = Integer.parseInt(st.nextToken());
-    		for (int j = 0; j < num - 1; j++) {
-    			int node = Integer.parseInt(st.nextToken());
-    			graph[first].add(node);
-    			indegree[node]++;
-    			first = node;
+    		int prev = -1;
+    		int cur = 0;
+    		while(st.hasMoreTokens()) {
+    			cur = Integer.parseInt(st.nextToken());
+    			if (prev != -1) {
+    				graph[prev].add(cur);
+    				indegree[cur]++;
+    			}
+    			prev = cur;
     		}
     	}
     	
