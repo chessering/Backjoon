@@ -1,109 +1,111 @@
 import java.io.*;
 import java.util.*;
 
-class Solution
-{
-	
-	static int[][] map;
-	static boolean[][] visited;
-	static List<Point> core;
-	static int n;
-	static int[] dy = {0, 1, 0, -1};
-	static int[] dx = {-1, 0, 1, 0};
-	static int sum, max_cnt ;
-	
-	
-	static void dfs(int idx, int cnt, int len) {
-		
-		if (cnt + (core.size() - idx) < max_cnt) return;
+class Solution {
 
-		if (idx == core.size()) {
-			if (max_cnt == cnt) sum = Math.min(sum, len);
-			else if (max_cnt < cnt) {
-				max_cnt = cnt;
-				sum = len;
-			}
-			return;
-		}
-		
-		//4방향 탐색
-		for (int i = 0; i < 4; i++) {
-			int ny = core.get(idx).y + dy[i];
-			int nx = core.get(idx).x + dx[i];
+    static int n;
+    static int[][] arr;
+    static boolean[][] visited;
+    static int[] dy = {0, 1, 0, -1};
+    static int[] dx = {-1, 0, 1, 0};
+    static List<int[]> core;
+    static int max_len, max_cnt;
 
-			boolean okay = true;
-			
-			while(ny >= 0 && nx >= 0 && ny < n && nx < n) {
-				if (map[ny][nx] == 1 || visited[ny][nx] == true) {
-					okay = false;
-					break;
-				}
-				visited[ny][nx] = true;
-				ny += dy[i];
-				nx += dx[i];
-			}
-			ny -= dy[i];
-			nx -= dx[i];
-			int line = Math.max(Math.abs(ny - core.get(idx).y), Math.abs(nx - core.get(idx).x));
-			if (okay) dfs(idx + 1, cnt + 1, len + line);
-			//방문체크 해제
-			while(ny != core.get(idx).y || nx != core.get(idx).x) {
-				visited[ny][nx] = false;
-				ny -= dy[i];
-				nx -= dx[i];
-			}
-		}
-		dfs(idx + 1, cnt, len);
-		
-	}
-	
-	
-	public static void main(String args[]) throws Exception
-	{
+    static boolean canConnect(int y, int x, int dir) {
+        //왼쪽 아래쪽 오른쪽 위쪽 순
+        int ny = y;
+        int nx = x;
+
+        while (true) { 
+            ny += dy[dir];
+            nx += dx[dir];
+            
+            if (ny < 0 || nx < 0 || ny >= n || nx >= n) break;
+
+            if (arr[ny][nx] == 1 || visited[ny][nx]) return false;
+        }
+        return true;
+    }
+    static void getwire(int y, int x, int dir, boolean install) {
+        int ny = y;
+        int nx = x;
+        while (true) { 
+            ny += dy[dir];
+            nx += dx[dir];
+            if (ny < 0 || nx < 0 || ny >= n || nx >= n) break;
+            visited[ny][nx] = install;
+        }
+    }
+    
+    static int getLen(int y, int x, int dir) {
+        //왼쪽 아래쪽 오른쪽 위쪽 순
+        if (dir == 0) return x;
+        else if (dir == 1) return n - y - 1;
+        else if (dir == 2) return n - x - 1;
+        else return y;
+    }
+
+    static void dfs(int idx, int cnt, int len) {
+
+        if (max_cnt > cnt + (core.size() - idx)) return;
+
+        if (idx == core.size()) {
+            if (cnt > max_cnt) {
+                max_cnt = cnt;
+                max_len = len;
+            } else if (cnt == max_cnt) {
+                max_len = Math.min(max_len, len);
+            }
+            return;
+        }
+
+        for (int i = idx; i < core.size(); i++) {
+            for (int d = 0; d < 4; d++) {
+                if (canConnect(core.get(i)[0], core.get(i)[1], d)) {
+                    getwire(core.get(i)[0], core.get(i)[1], d, true);
+                    dfs(i + 1, cnt + 1, len + getLen(core.get(i)[0], core.get(i)[1], d));
+                    getwire(core.get(i)[0], core.get(i)[1], d, false);
+                }
+            }
+            dfs(i + 1, cnt, len);
+        }
+
+    }
+
+	public static void main(String args[]) throws IOException	{
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		StringTokenizer st = new StringTokenizer(br.readLine());
-		int T = Integer.parseInt(st.nextToken());
+		int T = Integer.parseInt(br.readLine());
 
 		for(int test_case = 1; test_case <= T; test_case++)
 		{
+            StringTokenizer st = new StringTokenizer(br.readLine());
+            n = Integer.parseInt(st.nextToken());
 
-			st = new StringTokenizer(br.readLine());
-			
-			n = Integer.parseInt(st.nextToken());
-			map = new int[n][n];
-			visited = new boolean[n][n];
-			core = new ArrayList<Point>();
-			
-			for (int i = 0; i < n; i++) {
-				st = new StringTokenizer(br.readLine(), " ");
-				for (int j = 0; j < n; j++) {
-					map[i][j] = Integer.parseInt(st.nextToken());
-					if (map[i][j] == 1) {
-						if (i == 0 || j == 0 || i == n - 1 || j == n - 1) {
-							max_cnt++;
-						}
-						core.add(new Point(i, j));
-					}
-				}
-			}
+            arr = new int[n][n];
+            core = new ArrayList<>();
+            visited = new boolean[n][n];
 
-			sum = Integer.MAX_VALUE; max_cnt = 0;
-			
-			
-			dfs(0, 0, 0);
-			
-			System.out.println("#" + test_case + " " + sum);
-			
-		}
-	}
-	
-	static class Point{
-		int y;
-		int x;
-		
-		Point(int y, int x) {
-			this.y = y;
-			this.x = x;
+            for (int i = 0; i < n; i++) {
+                st = new StringTokenizer(br.readLine());
+                for (int j = 0; j < n; j++) {
+                    arr[i][j] = Integer.parseInt(st.nextToken());
+                    if (arr[i][j] == 1) {
+                        if (i == 0 || j == 0 || i == n - 1 || j == n - 1) max_cnt++;
+                        else core.add(new int[] {i, j});
+                    }
+                }
+            }
+
+            if (core.isEmpty()) {
+                System.out.println("#" + test_case + " " + max_len);
+            }
+
+            max_cnt = 0;
+            max_len = Integer.MAX_VALUE;
+
+            dfs(0, 0, 0);
+            System.out.println("#" + test_case + " " + max_len);
+
 		}
 	}
 }
